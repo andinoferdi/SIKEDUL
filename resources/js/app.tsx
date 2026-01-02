@@ -10,11 +10,13 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
-    resolve: (name) =>
-        resolvePageComponent(
-            `./pages/${name}.tsx`,
-            import.meta.glob('./pages/**/*.tsx'),
-        ),
+    resolve: (name) => {
+        const pages = import.meta.glob('./pages/**/*.tsx');
+        const path = `./pages/${name}.tsx`;
+        const indexPath = `./pages/${name}/index.tsx`;
+        
+        return resolvePageComponent(path, pages).catch(() => resolvePageComponent(indexPath, pages));
+    },
     setup({ el, App, props }) {
         const root = createRoot(el);
 
@@ -29,5 +31,4 @@ createInertiaApp({
     },
 });
 
-// This will set light / dark mode on load...
 initializeTheme();
