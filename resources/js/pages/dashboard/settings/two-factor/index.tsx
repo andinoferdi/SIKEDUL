@@ -1,4 +1,4 @@
-import HeadingSmall from '@/components/heading-small';
+import HeadingSmall from '@/components/ui/heading-small';
 import TwoFactorRecoveryCodes from '@/components/settings/two-factor-recovery-codes';
 import TwoFactorSetupModal from '@/components/settings/two-factor-setup-modal';
 import { Badge } from '@/components/ui/badge';

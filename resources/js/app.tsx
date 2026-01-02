@@ -4,16 +4,16 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initializeTheme } from './hooks/use-appearance';
+import { initializeTheme } from '@/hooks/use-appearance';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
-        const pages = import.meta.glob('./pages/**/*.tsx');
-        const path = `./pages/${name}.tsx`;
-        const indexPath = `./pages/${name}/index.tsx`;
+        const pages = import.meta.glob('@/pages/**/*.tsx');
+        const path = `@/pages/${name}.tsx`;
+        const indexPath = `@/pages/${name}/index.tsx`;
         
         return resolvePageComponent(path, pages).catch(() => resolvePageComponent(indexPath, pages));
     },

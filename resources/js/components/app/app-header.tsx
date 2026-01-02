@@ -1,5 +1,5 @@
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Icon } from '@/components/icon';
+import { Breadcrumbs } from '@/components/app/breadcrumbs';
+import { Icon } from '@/components/ui/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,8 +33,8 @@ import { dashboard } from '@/routes';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
-import AppLogo from './app-logo';
-import AppLogoIcon from './app-logo-icon';
+import AppLogo from '@/components/app/app-logo';
+import AppLogoIcon from '@/components/app/app-logo-icon';
 
 const mainNavItems: NavItem[] = [
     {

@@ -3,7 +3,7 @@ import { store } from '@/routes/register';
 import { Form, Head } from '@inertiajs/react';
 
 import InputError from '@/components/ui/input-error';
-import TextLink from '@/components/text-link';
+import TextLink from '@/components/ui/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

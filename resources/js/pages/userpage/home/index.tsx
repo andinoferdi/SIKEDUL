@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
-import HeroSection from './partials/hero-section';
-import LaravelBrandSection from './partials/laravel-brand-section';
-import NavigationHeader from './partials/navigation-header';
+import HeroSection from '@/pages/userpage/home/partials/hero-section';
+import LaravelBrandSection from '@/pages/userpage/home/partials/laravel-brand-section';
+import NavigationHeader from '@/pages/userpage/home/partials/navigation-header';
 
 export default function Welcome({ canRegister = true }: { canRegister?: boolean }) {
     return (
