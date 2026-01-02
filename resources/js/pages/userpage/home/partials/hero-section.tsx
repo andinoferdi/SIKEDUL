@@ -1,65 +1,74 @@
+import { login, register } from "@/routes"
+import { Link } from "@inertiajs/react"
+import { Calendar, CheckCircle2, Zap } from "lucide-react"
+
 export default function HeroSection() {
-    return (
-        <div className="flex-1 rounded-br-lg rounded-bl-lg bg-white p-6 pb-12 text-[13px] leading-[20px] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none lg:p-20 dark:bg-[#161615] dark:text-[#EDEDEC] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
-            <h1 className="mb-1 font-medium">Let's get started</h1>
-            <p className="mb-2 text-[#706f6c] dark:text-[#A1A09A]">
-                Laravel has an incredibly rich ecosystem.
-                <br />
-                We suggest starting with the following.
+  return (
+    <section className="relative overflow-hidden py-20 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="max-w-2xl">
+            <div className="mb-6 inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground">
+              <Zap className="mr-2 h-4 w-4" />
+              <span>Kelola waktu lebih cerdas</span>
+            </div>
+            <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl">
+              Atur Jadwal Anda dengan <span className="text-primary">SIKEDUL</span>
+            </h1>
+            <p className="mb-8 text-lg text-muted-foreground sm:text-xl">
+              Solusi manajemen waktu terpadu untuk produktivitas maksimal. Sinkronkan kalender, kelola tugas, dan
+              dapatkan pengingat cerdas dalam satu platform.
             </p>
-            <ul className="mb-4 flex flex-col lg:mb-6">
-                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-1/2 before:bottom-0 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                        </span>
-                    </span>
-                    <span>
-                        Read the
-                        <a
-                            href="https://laravel.com/docs"
-                            target="_blank"
-                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                        >
-                            <span>Documentation</span>
-                            <svg width={10} height={11} viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5">
-                                <path d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001" stroke="currentColor" strokeLinecap="square" />
-                            </svg>
-                        </a>
-                    </span>
-                </li>
-                <li className="relative flex items-center gap-4 py-2 before:absolute before:top-0 before:bottom-1/2 before:left-[0.4rem] before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A]">
-                    <span className="relative bg-white py-1 dark:bg-[#161615]">
-                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#e3e3e0] bg-[#FDFDFC] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] dark:border-[#3E3E3A] dark:bg-[#161615]">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A]" />
-                        </span>
-                    </span>
-                    <span>
-                        Watch video tutorials at
-                        <a
-                            href="https://laracasts.com"
-                            target="_blank"
-                            className="ml-1 inline-flex items-center space-x-1 font-medium text-[#f53003] underline underline-offset-4 dark:text-[#FF4433]"
-                        >
-                            <span>Laracasts</span>
-                            <svg width={10} height={11} viewBox="0 0 10 11" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5">
-                                <path d="M7.70833 6.95834V2.79167H3.54167M2.5 8L7.5 3.00001" stroke="currentColor" strokeLinecap="square" />
-                            </svg>
-                        </a>
-                    </span>
-                </li>
-            </ul>
-            <ul className="flex gap-3 text-sm leading-normal">
-                <li>
-                    <a
-                        href="https://cloud.laravel.com"
-                        target="_blank"
-                        className="inline-block rounded-sm border border-black bg-[#1b1b18] px-5 py-1.5 text-sm leading-normal text-white hover:border-black hover:bg-black dark:border-[#eeeeec] dark:bg-[#eeeeec] dark:text-[#1C1C1A] dark:hover:border-white dark:hover:bg-white"
-                    >
-                        Deploy now
-                    </a>
-                </li>
-            </ul>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Link
+                href={register()}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg transition-all hover:scale-105 hover:bg-primary/90"
+              >
+                Mulai Gratis
+              </Link>
+              <Link
+                href={login()}
+                className="inline-flex h-12 items-center justify-center rounded-full border bg-background px-8 text-base font-semibold text-foreground transition-all hover:bg-accent"
+              >
+                Lihat Demo
+              </Link>
+            </div>
+            <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>Mudah digunakan</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>Aman & Pribadi</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative">
+            <div className="relative aspect-square overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 to-secondary p-8 shadow-2xl">
+              <div className="h-full w-full rounded-2xl bg-card p-6 shadow-inner">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="h-4 w-24 rounded bg-muted"></div>
+                  <div className="h-8 w-8 rounded-full bg-primary/20"></div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-lg border p-3">
+                      <div className="h-4 w-4 rounded-full border-2 border-primary"></div>
+                      <div className="h-3 w-32 rounded bg-muted"></div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-8">
+                  <Calendar className="h-full w-full text-primary/10" strokeWidth={0.5} />
+                </div>
+              </div>
+            </div>
+            <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/10 blur-2xl"></div>
+            <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-secondary/20 blur-3xl"></div>
+          </div>
         </div>
-    );
+      </div>
+    </section>
+  )
 }

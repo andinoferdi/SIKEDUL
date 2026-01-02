@@ -1,39 +1,48 @@
-import { dashboard, login, register } from '@/routes';
-import { type SharedData } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { dashboard, login, register } from "@/routes"
+import type { SharedData } from "@/types"
+import { Link, usePage } from "@inertiajs/react"
+import { CalendarDays } from "lucide-react"
 
 export default function NavigationHeader({ canRegister }: { canRegister: boolean }) {
-    const { auth } = usePage<SharedData>().props;
+  const { auth } = usePage<SharedData>().props
 
-    return (
-        <header className="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl">
-            <nav className="flex items-center justify-end gap-4">
-                {auth.user ? (
-                    <Link
-                        href={dashboard()}
-                        className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                    >
-                        Dashboard
-                    </Link>
-                ) : (
-                    <>
-                        <Link
-                            href={login()}
-                            className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
-                        >
-                            Log in
-                        </Link>
-                        {canRegister && (
-                            <Link
-                                href={register()}
-                                className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
-                            >
-                                Register
-                            </Link>
-                        )}
-                    </>
-                )}
-            </nav>
-        </header>
-    );
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <CalendarDays className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground">SIKEDUL</span>
+        </div>
+        <nav className="flex items-center gap-4">
+          {auth.user ? (
+            <Link
+              href={dashboard()}
+              className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href={login()}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Masuk
+              </Link>
+              {canRegister && (
+                <Link
+                  href={register()}
+                  className="inline-flex h-10 items-center justify-center rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Daftar Sekarang
+                </Link>
+              )}
+            </>
+          )}
+        </nav>
+      </div>
+    </header>
+  )
 }

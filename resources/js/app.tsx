@@ -11,9 +11,9 @@ const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => {
-        const pages = import.meta.glob('@/pages/**/*.tsx');
-        const path = `@/pages/${name}.tsx`;
-        const indexPath = `@/pages/${name}/index.tsx`;
+        const pages = import.meta.glob('./pages/**/*.tsx');
+        const path = `./pages/${name}.tsx`;
+        const indexPath = `./pages/${name}/index.tsx`;
         
         return resolvePageComponent(path, pages).catch(() => resolvePageComponent(indexPath, pages));
     },

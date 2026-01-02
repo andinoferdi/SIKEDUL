@@ -5,14 +5,14 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
-    return Inertia::render('userpage/home/index', [
+    return Inertia::render('userpage/home', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard/home/index');
+        return Inertia::render('dashboard/home');
     })->name('dashboard');
 });
 
