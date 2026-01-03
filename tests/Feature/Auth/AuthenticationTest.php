@@ -10,8 +10,8 @@ test('login screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->withoutTwoFactor()->create();
+test('verified admin users can authenticate and access dashboard', function () {
+    $user = User::factory()->withoutTwoFactor()->create(['role' => 'admin']);
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
@@ -20,6 +20,32 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('verified non-admin users can authenticate', function () {
+    $user = User::factory()->withoutTwoFactor()->create(['role' => 'user']);
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('home', absolute: false));
+});
+
+test('unverified users are redirected to verification notice after login', function () {
+    $user = User::factory()->unverified()->withoutTwoFactor()->create([
+        'password' => 'password',
+    ]);
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('verification.notice', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

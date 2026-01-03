@@ -1,5 +1,12 @@
 <?php
 
+use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+
+uses(RefreshDatabase::class);
+
 test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
 
@@ -7,6 +14,8 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
+    Notification::fake();
+
     $response = $this->post(route('register.store'), [
         'name' => 'Test User',
         'username' => 'testuser',
@@ -15,6 +24,9 @@ test('new users can register', function () {
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertGuest();
-    $response->assertRedirect(route('login'));
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('verification.notice'));
+
+    $user = User::where('email', 'test@example.com')->first();
+    Notification::assertSentTo($user, VerifyEmailNotification::class);
 });

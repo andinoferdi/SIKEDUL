@@ -44,6 +44,46 @@ Proyek ini menggunakan SQLite sebagai database default. File database akan dibua
 
 Jika Anda ingin menggunakan MySQL atau PostgreSQL, ubah konfigurasi `DB_CONNECTION` dan variabel database lainnya di file `.env`.
 
+#### Setup Email Verification dengan Gmail SMTP
+
+Untuk mengirim email verification ke Gmail, Anda perlu konfigurasi SMTP dengan App Password:
+
+**Langkah 1: Aktifkan 2-Step Verification**
+
+1. Buka https://myaccount.google.com/security
+2. Aktifkan **"2-Step Verification"** atau **"Verifikasi 2 Langkah"**
+
+**Langkah 2: Buat Google App Password**
+
+1. Buka langsung: https://myaccount.google.com/apppasswords
+2. Login ulang jika diminta
+3. Ketik nama aplikasi: `SIKEDUL Email Verification`
+4. Klik **"Buat"** atau **"Create"**
+5. Salin password 16 karakter yang muncul (contoh: `abcd efgh ijkl mnop`)
+6. Hapus spasi: `abcdefghijklmnop`
+
+**Langkah 3: Update File `.env`**
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=email-anda@gmail.com
+MAIL_PASSWORD=password-app-16-karakter
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="email-anda@gmail.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+**Langkah 4: Clear Cache**
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+Setelah konfigurasi, email verification akan dikirim ke inbox Gmail.
+
 ### 6. Jalankan Migrasi dan Seeder
 
 ```bash
