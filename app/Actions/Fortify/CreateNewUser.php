@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -32,7 +33,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'username' => $input['username'],
             'email' => $input['email'],
@@ -42,5 +43,10 @@ class CreateNewUser implements CreatesNewUsers
             'role' => 'user',
             'is_disabled' => 0,
         ]);
+
+        // Trigger event untuk kirim verification email
+        event(new Registered($user));
+
+        return $user;
     }
 }

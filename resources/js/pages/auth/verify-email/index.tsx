@@ -2,6 +2,7 @@
 import TextLink from '@/components/ui/text-link';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import AuthLayout from '@/pages/auth/layout';
 import { logout } from '@/routes';
 import { send } from '@/routes/verification';
@@ -14,6 +15,12 @@ export default function VerifyEmail({ status }: { status?: string }) {
             description="Please verify your email address by clicking on the link we just emailed to you."
         >
             <Head title="Email verification" />
+
+            {status && status !== 'verification-link-sent' && (
+                <Alert className="mb-4">
+                    <AlertDescription>{status}</AlertDescription>
+                </Alert>
+            )}
 
             {status === 'verification-link-sent' && (
                 <div className="mb-4 text-center text-sm font-medium text-green-600">

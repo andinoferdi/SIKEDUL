@@ -17,10 +17,17 @@ class RegisterResponse implements RegisterResponseContract
      */
     public function toResponse($request)
     {
-        Auth::logout();
+        // Logout user yang baru register (belum verified)
+        Auth::guard('web')->logout();
+
+        // Redirect ke halaman verify email dengan pesan
+        $redirect = route('verification.notice');
 
         return $request->wantsJson()
-            ? new JsonResponse('', 201)
-            : redirect()->route('login');
+            ? new JsonResponse([
+                'redirect' => $redirect,
+                'status' => 'Registration successful! Please check your email to verify your account.'
+            ], 201)
+            : redirect($redirect)->with('status', 'Registration successful! Please check your email to verify your account.');
     }
 }

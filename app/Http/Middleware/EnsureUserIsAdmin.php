@@ -8,14 +8,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsAdmin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || $request->user()->role !== 'admin') {
+        $user = $request->user();
+
+        // belum login
+        if (! $user) {
+            abort(403, 'Silakan login.');
+        }
+
+        // BUKAN admin
+        if ($user->role !== 'admin') {
             abort(403, 'Unauthorized access. Admin only.');
         }
 
