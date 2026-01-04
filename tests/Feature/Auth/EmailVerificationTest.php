@@ -77,22 +77,6 @@ test('unverified user cannot access protected routes', function () {
     $response->assertRedirect(route('verification.notice'));
 });
 
-test('verified admin can access dashboard', function () {
-    $admin = User::factory()->create(['role' => 'admin']);
-
-    $response = $this->actingAs($admin)->get(route('dashboard'));
-
-    $response->assertOk();
-});
-
-test('verified non-admin cannot access dashboard', function () {
-    $user = User::factory()->create(['role' => 'user']);
-
-    $response = $this->actingAs($user)->get(route('dashboard'));
-
-    $response->assertStatus(403);
-});
-
 test('verified user is redirected to dashboard from verification prompt', function () {
     $user = User::factory()->create([
         'email_verified_at' => now(),

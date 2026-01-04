@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\URL;
 
 class VerifyEmailNotification extends VerifyEmail
 {
-
     /**
      * Get the verification URL for the given notifiable.
      */
@@ -35,7 +34,7 @@ class VerifyEmailNotification extends VerifyEmail
 
         return (new MailMessage)
             ->subject('Verify Your Email Address - SIKEDUL')
-            ->greeting('Hello ' . $notifiable->name . '!')
+            ->greeting('Hello '.$notifiable->name.'!')
             ->line('Thank you for registering with SIKEDUL (Sistem Informasi Penjadwalan Cerdas).')
             ->line('Please click the button below to verify your email address and activate your account.')
             ->action('Verify Email Address', $verificationUrl)

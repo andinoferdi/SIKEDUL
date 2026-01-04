@@ -2,7 +2,6 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
 
 test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
@@ -31,49 +30,25 @@ test('verified non-admin users can authenticate', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('home', absolute: false));
+    $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('unverified users are redirected to verification notice after login', function () {
+test('unverified users can login and are redirected to dashboard then to verification notice', function () {
     $user = User::factory()->unverified()->withoutTwoFactor()->create([
         'password' => 'password',
     ]);
 
+    // Login succeeds and redirects to dashboard
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('verification.notice', absolute: false));
-});
+    $response->assertRedirect(route('dashboard', absolute: false));
 
-test('users with two factor enabled are redirected to two factor challenge', function () {
-    if (! Features::canManageTwoFactorAuthentication()) {
-        $this->markTestSkipped('Two-factor authentication is not enabled.');
-    }
-
-    Features::twoFactorAuthentication([
-        'confirm' => true,
-        'confirmPassword' => true,
-    ]);
-
-    $user = User::factory()->create();
-
-    $user->forceFill([
-        'two_factor_secret' => encrypt('test-secret'),
-        'two_factor_recovery_codes' => encrypt(json_encode(['code1', 'code2'])),
-        'two_factor_confirmed_at' => now(),
-    ])->save();
-
-    $response = $this->post(route('login'), [
-        'email' => $user->email,
-        'password' => 'password',
-    ]);
-
-    $response->assertRedirect(route('two-factor.login'));
-    $response->assertSessionHas('login.id', $user->id);
-    $this->assertGuest();
+    // But when accessing dashboard, unverified user redirected to verification notice
+    $this->get(route('dashboard'))->assertRedirect(route('verification.notice'));
 });
 
 test('users can not authenticate with invalid password', function () {

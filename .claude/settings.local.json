@@ -6,7 +6,8 @@
       "Bash(php artisan test:*)",
       "Bash(php artisan:*)",
       "Bash(php artisan cache:clear:*)",
-      "Bash(vendor/bin/pint:*)"
+      "Bash(vendor/bin/pint:*)",
+      "Bash(find:*)"
     ]
   }
 }
