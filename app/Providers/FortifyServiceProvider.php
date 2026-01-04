@@ -7,11 +7,16 @@ use App\Actions\Fortify\LoginResponse;
 use App\Actions\Fortify\RegisterResponse;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\VerifyEmailResponse;
+use App\Models\User;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
@@ -39,6 +44,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureAuthentication();
     }
 
     /**
@@ -88,6 +94,42 @@ class FortifyServiceProvider extends ServiceProvider
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
+        });
+    }
+
+    /**
+     * Configure custom authentication logic.
+     */
+    private function configureAuthentication(): void
+    {
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->email)->first();
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                if (! $user->hasVerifiedEmail()) {
+                    throw ValidationException::withMessages([
+                        Fortify::username() => ['Email belum diverifikasi.'],
+                    ]);
+                }
+
+                return $user;
+            }
+        });
+
+        // Auto-login user saat mengakses email verification link
+        Authenticate::redirectUsing(function (Request $request) {
+            if ($request->routeIs('verification.verify')) {
+                // Login user berdasarkan ID dari URL
+                Auth::loginUsingId($request->route('id'));
+
+                // Return URL string (bukan Response object) untuk redirect kembali ke verification
+                return route('verification.verify', [
+                    'id' => $request->route('id'),
+                    'hash' => $request->route('hash'),
+                    'expires' => $request->query('expires'),
+                    'signature' => $request->query('signature'),
+                ]);
+            }
         });
     }
 }

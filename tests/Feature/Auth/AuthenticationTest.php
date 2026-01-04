@@ -33,22 +33,19 @@ test('verified non-admin users can authenticate', function () {
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('unverified users can login and are redirected to dashboard then to verification notice', function () {
+test('unverified users cannot login', function () {
     $user = User::factory()->unverified()->withoutTwoFactor()->create([
         'password' => 'password',
     ]);
 
-    // Login succeeds and redirects to dashboard
+    // Login attempt should fail with validation error
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
         'password' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard', absolute: false));
-
-    // But when accessing dashboard, unverified user redirected to verification notice
-    $this->get(route('dashboard'))->assertRedirect(route('verification.notice'));
+    $this->assertGuest();
+    $response->assertSessionHasErrors(['email' => 'Email belum diverifikasi.']);
 });
 
 test('users can not authenticate with invalid password', function () {

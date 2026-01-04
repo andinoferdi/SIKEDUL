@@ -10,6 +10,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('check-your-email', function () {
+    return Inertia::render('auth/check-your-email');
+})->middleware('guest')->name('check-your-email');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard/home');

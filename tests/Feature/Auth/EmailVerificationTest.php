@@ -13,7 +13,7 @@ test('email verification screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('email can be verified', function () {
+test('email can be verified and redirects to login', function () {
     $user = User::factory()->unverified()->create();
 
     Event::fake();
@@ -28,7 +28,10 @@ test('email can be verified', function () {
 
     Event::assertDispatched(Verified::class);
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
-    $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+
+    // Should redirect to login with flash message, not dashboard
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('status', 'Email berhasil diverifikasi, silakan login.');
 });
 
 test('email is not verified with invalid hash', function () {
@@ -88,7 +91,7 @@ test('verified user is redirected to dashboard from verification prompt', functi
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
-test('already verified user visiting verification link is redirected without firing event again', function () {
+test('already verified user visiting verification link is redirected to login without firing event again', function () {
     $user = User::factory()->create([
         'email_verified_at' => now(),
     ]);
@@ -102,7 +105,7 @@ test('already verified user visiting verification link is redirected without fir
     );
 
     $this->actingAs($user)->get($verificationUrl)
-        ->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+        ->assertRedirect(route('login'));
 
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     Event::assertNotDispatched(Verified::class);

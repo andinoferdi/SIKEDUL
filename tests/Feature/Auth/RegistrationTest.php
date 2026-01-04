@@ -13,7 +13,7 @@ test('registration screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('new users can register', function () {
+test('new users can register and are redirected to check email page', function () {
     Notification::fake();
 
     $response = $this->post(route('register.store'), [
@@ -24,9 +24,11 @@ test('new users can register', function () {
         'password_confirmation' => 'password',
     ]);
 
-    $this->assertAuthenticated();
-    $response->assertRedirect(route('verification.notice'));
+    // User should NOT be authenticated after registration
+    $this->assertGuest();
+    $response->assertRedirect(route('check-your-email'));
 
     $user = User::where('email', 'test@example.com')->first();
+    expect($user)->not->toBeNull();
     Notification::assertSentTo($user, VerifyEmailNotification::class);
 });
