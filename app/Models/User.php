@@ -28,6 +28,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'timezone',
         'role',
         'is_disabled',
+        'email_verified_at',
     ];
 
     /**
@@ -63,5 +64,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifyEmailNotification);
+    }
+
+    /**
+     * Check if the user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user is disabled.
+     */
+    public function isDisabled(): bool
+    {
+        return $this->is_disabled === 1;
     }
 }
