@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -80,5 +81,21 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isDisabled(): bool
     {
         return $this->is_disabled === 1;
+    }
+
+    /**
+     * Get the event categories for the user.
+     */
+    public function eventCategories(): HasMany
+    {
+        return $this->hasMany(EventCategory::class);
+    }
+
+    /**
+     * Get the events for the user.
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 }
