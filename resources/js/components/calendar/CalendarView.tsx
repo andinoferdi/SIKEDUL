@@ -10,8 +10,7 @@ import type {
     DateSelectArg,
     EventContentArg,
 } from '@fullcalendar/core';
-import { Badge } from '@/components/ui/badge';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -49,6 +48,23 @@ export default function CalendarView({
     );
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
+    // Add click handler to calendar title for opening month picker
+    useEffect(() => {
+        // Wait for next tick to ensure FullCalendar has rendered
+        const timer = setTimeout(() => {
+            const calendarEl = calendarRef.current?.elRef?.current;
+            if (!calendarEl) return;
+
+            const titleEl = calendarEl.querySelector('.fc-toolbar-title');
+            if (!titleEl) return;
+
+            const handleClick = () => setMonthPickerOpen(true);
+            titleEl.addEventListener('click', handleClick);
+        }, 0);
+
+        return () => clearTimeout(timer);
+    }, []);
+
     const calendarEvents: EventInput[] = useMemo(
         () =>
             events.map((event) => ({
@@ -61,12 +77,6 @@ export default function CalendarView({
                 extendedProps: {
                     event,
                 },
-                classNames:
-                    event.status === 'canceled'
-                        ? ['opacity-50', 'line-through']
-                        : event.status === 'done'
-                          ? ['opacity-75']
-                          : [],
             })),
         [events],
     );
@@ -90,13 +100,12 @@ export default function CalendarView({
 
     const handleDatesSet = (arg: DatesSetArg) => {
         onDatesSet(arg.startStr, arg.endStr);
-        const date = arg.view.currentStart;
-        setSelectedYear(date.getFullYear());
-        setSelectedMonth(date.getMonth());
-    };
-
-    const handleTitleClick = () => {
-        setMonthPickerOpen(true);
+        // Add 15 days to currentStart to ensure we're in the displayed month
+        // currentStart may be in the previous month (e.g., last Sunday of Dec for Jan view)
+        const viewStart = arg.view.currentStart;
+        const middleOfMonth = new Date(viewStart.getTime() + 15 * 24 * 60 * 60 * 1000);
+        setSelectedYear(middleOfMonth.getFullYear());
+        setSelectedMonth(middleOfMonth.getMonth());
     };
 
     const handleMonthYearChange = () => {
@@ -127,27 +136,64 @@ export default function CalendarView({
         (_, i) => new Date().getFullYear() - 5 + i,
     );
 
-    const getStatusVariant = (status: string) => {
+    const getStatusColor = (status: string, isTimeGrid: boolean = false) => {
         switch (status) {
             case 'done':
-                return 'success';
+                return 'text-green-400';
             case 'canceled':
-                return 'destructive';
+                return 'text-red-400 line-through';
             default:
-                return 'info';
+                return isTimeGrid ? 'text-white' : 'text-blue-600';
         }
+    };
+
+    const formatEventTime = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
     };
 
     const renderEventContent = (eventInfo: EventContentArg) => {
         const event = eventInfo.event.extendedProps.event as Event;
+        const timeText = formatEventTime(event.start);
+        const isTimeGrid = eventInfo.view.type.includes('timeGrid');
+
+        if (isTimeGrid) {
+            // Week view - event height is determined by duration, fill the space
+            const statusColor = getStatusColor(event.status, true);
+            return (
+                <div className="w-full h-full flex flex-col gap-0 px-1 py-0.5 overflow-hidden">
+                    <span className={`flex items-center gap-1 text-[11px] font-medium leading-tight ${statusColor}`}>
+                        {event.category?.color && (
+                            <span
+                                className="inline-block size-2 shrink-0 rounded-full border border-white/30"
+                                style={{ backgroundColor: event.category.color }}
+                            />
+                        )}
+                        <span className="truncate">{eventInfo.event.title}</span>
+                    </span>
+                    <span className={`text-[10px] ${event.status === 'canceled' ? 'text-red-400/80' : 'text-white/80'}`}>{timeText}</span>
+                </div>
+            );
+        }
+
+        // Month view - compact display
         return (
-            <Badge
-                variant={getStatusVariant(event.status)}
-                className="w-full justify-start gap-1 rounded-sm px-1 py-0.5"
-            >
-                <span className="truncate text-[11px]">{eventInfo.timeText}</span>
-                <span className="truncate font-medium text-[11px]">{eventInfo.event.title}</span>
-            </Badge>
+            <div className="w-full flex flex-col gap-0 px-1.5 py-1 overflow-hidden">
+                <span className="text-[10px] text-muted-foreground">{timeText}</span>
+                <span className={`flex items-center gap-1 text-[11px] font-medium whitespace-normal break-words w-full ${getStatusColor(event.status)}`}>
+                    {event.category?.color && (
+                        <span
+                            className="inline-block size-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: event.category.color }}
+                        />
+                    )}
+                    {eventInfo.event.title}
+                </span>
+            </div>
         );
     };
 
@@ -159,8 +205,8 @@ export default function CalendarView({
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
                     headerToolbar={{
-                        left: 'prev,next',
-                        center: 'title',
+                        left: '',
+                        center: 'prev title next',
                         right: 'dayGridMonth,timeGridWeek',
                     }}
                     titleFormat={{ year: 'numeric', month: 'long' }}
@@ -191,12 +237,6 @@ export default function CalendarView({
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: false,
-                    }}
-                    customButtons={{
-                        title: {
-                            text: 'title',
-                            click: handleTitleClick,
-                        },
                     }}
                 />
             </div>
