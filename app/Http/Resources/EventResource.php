@@ -25,6 +25,7 @@ class EventResource extends JsonResource
             'start_at_utc' => $this->start_at_utc->toISOString(),
             'end_at_utc' => $this->end_at_utc->toISOString(),
             'status' => $this->status,
+            'reminder_minutes' => $this->reminder_minutes,
             'category' => new EventCategoryResource($this->whenLoaded('category')),
             'category_id' => $this->category_id,
             'created_at' => $this->created_at->toISOString(),

@@ -98,4 +98,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Event::class);
     }
+
+    /**
+     * Get the reminders for the user.
+     */
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
+    /**
+     * Get the todo lists for the user.
+     */
+    public function todoLists(): HasMany
+    {
+        return $this->hasMany(TodoList::class);
+    }
 }

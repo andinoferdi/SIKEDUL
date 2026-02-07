@@ -6,7 +6,7 @@ import { useCalendar } from '@/hooks/useCalendar';
 import { parseFromInput } from '@/lib/timezone';
 import AppLayout from '@/pages/dashboard/layout';
 import type { BreadcrumbItem } from '@/types';
-import type { Event } from '@/types/calendar';
+import type { CalendarEntry, Event } from '@/types/calendar';
 import { Head } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -39,13 +39,22 @@ export default function CalendarPage({ timezone }: CalendarPageProps) {
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const [initialStart, setInitialStart] = useState<Date | undefined>();
     const [initialEnd, setInitialEnd] = useState<Date | undefined>();
+    const [showTodos, setShowTodos] = useState(true);
+    const [lastRange, setLastRange] = useState<{ start: string; end: string } | null>(null);
 
     useEffect(() => {
         fetchCategories();
     }, [fetchCategories]);
 
+    useEffect(() => {
+        if (lastRange) {
+            fetchEvents({ ...lastRange, includeTodos: showTodos });
+        }
+    }, [fetchEvents, lastRange, showTodos]);
+
     const handleDatesSet = (start: string, end: string) => {
-        fetchEvents({ start, end });
+        setLastRange({ start, end });
+        fetchEvents({ start, end, includeTodos: showTodos });
     };
 
     const handleDateSelect = (start: Date, end: Date) => {
@@ -55,7 +64,15 @@ export default function CalendarPage({ timezone }: CalendarPageProps) {
         setEventDialogOpen(true);
     };
 
-    const handleEventClick = (event: Event) => {
+    const handleEventClick = (entry: CalendarEntry) => {
+        if (entry.type === 'todo') {
+            if (confirm('Todo item dibuka di halaman Todo. Lanjutkan?')) {
+                window.location.href = '/todo';
+            }
+            return;
+        }
+
+        const event = entry as Event;
         setSelectedEvent(event);
         setInitialStart(undefined);
         setInitialEnd(undefined);
@@ -132,6 +149,12 @@ export default function CalendarPage({ timezone }: CalendarPageProps) {
                         </p>
                     </div>
                     <div className="flex gap-2">
+                        <Button
+                            variant={showTodos ? 'default' : 'outline'}
+                            onClick={() => setShowTodos((prev) => !prev)}
+                        >
+                            {showTodos ? 'Hide Todo' : 'Show Todo'}
+                        </Button>
                         <EventCategoryManager
                             categories={categories}
                             onCreateCategory={createCategory}

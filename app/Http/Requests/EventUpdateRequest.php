@@ -30,6 +30,7 @@ class EventUpdateRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'category_id' => ['sometimes', 'nullable', 'exists:event_categories,id'],
             'status' => ['sometimes', 'nullable', 'in:planned,done,canceled'],
+            'reminder_minutes' => ['sometimes', 'nullable', 'integer', 'in:0,5,10,15,30,60,1440'],
         ];
 
         // Add overlap validation if start_at or end_at is being updated
@@ -91,6 +92,7 @@ class EventUpdateRequest extends FormRequest
             'end_at.after' => 'End time must be after start time.',
             'category_id.exists' => 'Selected category does not exist.',
             'status.in' => 'Status must be one of: planned, done, or canceled.',
+            'reminder_minutes.in' => 'Reminder must be 0, 5, 10, 15, 30, 60 minutes, or 1 day before the event.',
         ];
     }
 }

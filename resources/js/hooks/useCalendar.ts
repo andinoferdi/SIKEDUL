@@ -1,6 +1,6 @@
 import type {
+    CalendarEntry,
     CategoryFormData,
-    Event,
     EventCategory,
     EventFormData,
 } from '@/types/calendar';
@@ -13,13 +13,13 @@ interface DateRange {
 }
 
 export function useCalendar(timezone: string) {
-    const [events, setEvents] = useState<Event[]>([]);
+    const [events, setEvents] = useState<CalendarEntry[]>([]);
     const [categories, setCategories] = useState<EventCategory[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchEvents = useCallback(
-        async (dateRange: DateRange) => {
+        async (dateRange: DateRange & { includeTodos?: boolean }) => {
             setLoading(true);
             setError(null);
             try {
@@ -27,9 +27,10 @@ export function useCalendar(timezone: string) {
                     params: {
                         start: dateRange.start,
                         end: dateRange.end,
+                        include_todos: (dateRange.includeTodos ?? false) ? 1 : 0,
                     },
                 });
-                setEvents(response.data.events);
+                setEvents(response.data.entries);
             } catch (err: unknown) {
                 const errorMessage =
                     err instanceof Error

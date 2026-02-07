@@ -1,4 +1,4 @@
-import type { Event } from '@/types/calendar';
+import type { CalendarEntry } from '@/types/calendar';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -25,12 +25,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { formatDateOnly } from '@/lib/timezone';
 
 interface CalendarViewProps {
-    events: Event[];
+    events: CalendarEntry[];
     timezone: string;
     onDateSelect: (start: Date, end: Date) => void;
-    onEventClick: (event: Event) => void;
+    onEventClick: (event: CalendarEntry) => void;
     onDatesSet: (start: string, end: string) => void;
 }
 
@@ -67,17 +68,26 @@ export default function CalendarView({
 
     const calendarEvents: EventInput[] = useMemo(
         () =>
-            events.map((event) => ({
-                id: event.id.toString(),
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                backgroundColor: event.category?.color || '#6B7280',
-                borderColor: event.category?.color || '#6B7280',
-                extendedProps: {
-                    event,
-                },
-            })),
+            events.map((entry) => {
+                const isTodo = entry.type === 'todo';
+                return {
+                    id: `${entry.type}-${entry.id}`,
+                    title: entry.title,
+                    start: entry.start,
+                    end: entry.end,
+                    allDay: entry.allDay,
+                    backgroundColor: isTodo
+                        ? '#F59E0B'
+                        : entry.category?.color || '#6B7280',
+                    borderColor: isTodo
+                        ? '#D97706'
+                        : entry.category?.color || '#6B7280',
+                    classNames: isTodo ? ['calendar-todo'] : [],
+                    extendedProps: {
+                        event: entry,
+                    },
+                };
+            }),
         [events],
     );
 
@@ -94,12 +104,14 @@ export default function CalendarView({
     };
 
     const handleEventClick = (arg: EventClickArg) => {
-        const event = arg.event.extendedProps.event as Event;
-        onEventClick(event);
+        const entry = arg.event.extendedProps.event as CalendarEntry;
+        onEventClick(entry);
     };
 
     const handleDatesSet = (arg: DatesSetArg) => {
-        onDatesSet(arg.startStr, arg.endStr);
+        const start = formatDateOnly(arg.start, timezone);
+        const end = formatDateOnly(arg.end, timezone);
+        onDatesSet(start, end);
         // Add 15 days to currentStart to ensure we're in the displayed month
         // currentStart may be in the previous month (e.g., last Sunday of Dec for Jan view)
         const viewStart = arg.view.currentStart;
@@ -157,9 +169,38 @@ export default function CalendarView({
     };
 
     const renderEventContent = (eventInfo: EventContentArg) => {
-        const event = eventInfo.event.extendedProps.event as Event;
+        const event = eventInfo.event.extendedProps.event as CalendarEntry;
         const timeText = formatEventTime(event.start);
         const isTimeGrid = eventInfo.view.type.includes('timeGrid');
+
+        if (event.type === 'todo') {
+            const status = event.todo_status ?? 'upcoming';
+            const statusLabel =
+                status === 'ongoing'
+                    ? 'Sedang'
+                    : status === 'done'
+                      ? 'Selesai'
+                      : 'Akan datang';
+            const statusClass =
+                status === 'ongoing'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : status === 'done'
+                      ? 'bg-slate-200 text-slate-600 line-through'
+                      : 'bg-amber-100 text-amber-700';
+            return (
+                <div className="w-full flex items-center gap-2 px-1 py-0.5">
+                    <span className="inline-block size-2 shrink-0 rounded-full bg-amber-500" />
+                    <span className="text-[11px] font-medium text-amber-700">
+                        {eventInfo.event.title}
+                    </span>
+                    <span
+                        className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-medium ${statusClass}`}
+                    >
+                        {statusLabel}
+                    </span>
+                </div>
+            );
+        }
 
         if (isTimeGrid) {
             // Week view - event height is determined by duration, fill the space

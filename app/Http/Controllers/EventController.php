@@ -7,6 +7,9 @@ use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
+use App\Models\Reminder;
+use App\Models\TodoItem;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,12 +36,17 @@ class EventController extends Controller
 
         $validated = $request->validate([
             'start' => ['required', 'date'],
-            'end' => ['required', 'date', 'after:start'],
+            'end' => ['required', 'date'],
+            'include_todos' => ['nullable', 'boolean'],
         ]);
 
         // Convert the user's timezone dates to UTC for database query
         $startUtc = DateTimeHelper::convertToUTC($validated['start'], $user->timezone);
         $endUtc = DateTimeHelper::convertToUTC($validated['end'], $user->timezone);
+
+        if ($endUtc->lessThanOrEqualTo($startUtc)) {
+            $endUtc = $startUtc->copy()->addDay();
+        }
 
         $events = Event::query()
             ->forUser($user->id)
@@ -47,8 +55,84 @@ class EventController extends Controller
             ->orderBy('start_at_utc')
             ->get();
 
+        $entries = collect(EventResource::collection($events)->resolve())
+            ->map(function (array $event) {
+                $event['type'] = 'event';
+                $event['allDay'] = false;
+                return $event;
+            });
+
+        $includeTodos = (bool) ($validated['include_todos'] ?? false);
+
+        if ($includeTodos) {
+            $rangeStartDate = Carbon::parse($validated['start'], $user->timezone)->toDateString();
+            $rangeEndDate = Carbon::parse($validated['end'], $user->timezone)->toDateString();
+
+            $todoItems = TodoItem::query()
+                ->whereHas('todoList', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->where(function ($query) use ($rangeStartDate, $rangeEndDate) {
+                    $query->whereNotNull('due_date')
+                        ->whereBetween('due_date', [$rangeStartDate, $rangeEndDate])
+                        ->orWhere(function ($rangeQuery) use ($rangeStartDate, $rangeEndDate) {
+                            $rangeQuery->whereNull('due_date')
+                                ->whereNotNull('start_date')
+                                ->whereNotNull('end_date')
+                                ->where('start_date', '<=', $rangeEndDate)
+                                ->where('end_date', '>=', $rangeStartDate);
+                        });
+                })
+                ->orderBy('due_date')
+                ->orderBy('start_date')
+                ->get();
+
+            $today = Carbon::now($user->timezone)->startOfDay();
+
+            $todoEntries = $todoItems->map(function (TodoItem $item) use ($user, $today) {
+                if ($item->due_date) {
+                    $startDate = $item->due_date->toDateString();
+                    $endDate = $item->due_date->copy()->addDay()->toDateString();
+                    $rangeStart = $item->due_date->copy()->startOfDay();
+                    $rangeEnd = $item->due_date->copy()->endOfDay();
+                } else {
+                    $startDate = $item->start_date->toDateString();
+                    $endDate = $item->end_date->copy()->addDay()->toDateString();
+                    $rangeStart = $item->start_date->copy()->startOfDay();
+                    $rangeEnd = $item->end_date->copy()->endOfDay();
+                }
+
+                if ($item->is_done) {
+                    $status = 'done';
+                } elseif ($today->lt($rangeStart)) {
+                    $status = 'upcoming';
+                } elseif ($today->gt($rangeEnd)) {
+                    $status = 'done';
+                } else {
+                    $status = 'ongoing';
+                }
+
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'start' => $startDate,
+                    'end' => $endDate,
+                    'allDay' => true,
+                    'type' => 'todo',
+                    'is_done' => $item->is_done,
+                    'todo_list_id' => $item->todo_list_id,
+                    'todo_status' => $status,
+                    'due_date' => $item->due_date?->format('Y-m-d'),
+                    'start_date' => $item->start_date?->format('Y-m-d'),
+                    'end_date' => $item->end_date?->format('Y-m-d'),
+                ];
+            });
+
+            $entries = $entries->concat($todoEntries);
+        }
+
         return response()->json([
-            'events' => EventResource::collection($events),
+            'entries' => $entries->values(),
         ]);
     }
 
@@ -72,7 +156,10 @@ class EventController extends Controller
             'start_at_utc' => $startUtc,
             'end_at_utc' => $endUtc,
             'status' => $validated['status'] ?? 'planned',
+            'reminder_minutes' => $validated['reminder_minutes'] ?? null,
         ]);
+
+        $this->createReminderForEvent($event);
 
         $event->load('category');
 
@@ -135,6 +222,10 @@ class EventController extends Controller
             $updateData['status'] = $validated['status'];
         }
 
+        if (array_key_exists('reminder_minutes', $validated)) {
+            $updateData['reminder_minutes'] = $validated['reminder_minutes'];
+        }
+
         // Convert times from user timezone to UTC if provided
         if (isset($validated['start_at'])) {
             $updateData['start_at_utc'] = DateTimeHelper::convertToUTC($validated['start_at'], $user->timezone);
@@ -145,6 +236,9 @@ class EventController extends Controller
         }
 
         $event->update($updateData);
+
+        $this->refreshReminderForEvent($event);
+
         $event->load('category');
 
         return response()->json([
@@ -170,5 +264,36 @@ class EventController extends Controller
         return response()->json([
             'message' => 'Event deleted successfully.',
         ]);
+    }
+
+    private function createReminderForEvent(Event $event): void
+    {
+        if ($event->reminder_minutes === null || $event->status === 'canceled') {
+            return;
+        }
+
+        $sendAtUtc = $event->start_at_utc->copy()->subMinutes($event->reminder_minutes);
+
+        // Jangan buat reminder jika event start sudah lewat lebih dari 30 menit
+        if ($event->start_at_utc->lt(now()->subMinutes(30))) {
+            return;
+        }
+
+        Reminder::create([
+            'user_id' => $event->user_id,
+            'event_id' => $event->id,
+            'send_at_utc' => $sendAtUtc,
+            'channel' => Reminder::CHANNEL_EMAIL,
+            'status' => Reminder::STATUS_PENDING,
+        ]);
+    }
+
+    private function refreshReminderForEvent(Event $event): void
+    {
+        $event->pendingReminders()->update(['status' => Reminder::STATUS_CANCELED]);
+
+        if ($event->status !== 'canceled') {
+            $this->createReminderForEvent($event);
+        }
     }
 }

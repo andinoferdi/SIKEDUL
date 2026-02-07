@@ -57,6 +57,7 @@ export default function EventDialog({
         end_at: '',
         category_id: undefined,
         status: 'planned',
+        reminder_minutes: null,
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
@@ -92,6 +93,7 @@ export default function EventDialog({
                 end_at: formatForInput(event.end, timezone),
                 category_id: event.category_id,
                 status: event.status,
+                reminder_minutes: event.reminder_minutes ?? null,
             });
         } else if (initialStart && initialEnd) {
             setFormData({
@@ -101,6 +103,7 @@ export default function EventDialog({
                 end_at: formatForInput(initialEnd, timezone),
                 category_id: undefined,
                 status: 'planned',
+                reminder_minutes: 15,
             });
         }
         setErrors({});
@@ -325,6 +328,36 @@ export default function EventDialog({
                             </Select>
                             {errors.status && (
                                 <InputError message={errors.status} />
+                            )}
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="reminder">Email Reminder</Label>
+                            <Select
+                                value={formData.reminder_minutes?.toString() ?? 'none'}
+                                onValueChange={(value) =>
+                                    setFormData({
+                                        ...formData,
+                                        reminder_minutes: value === 'none' ? null : parseInt(value),
+                                    })
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="No reminder" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No reminder</SelectItem>
+                                    <SelectItem value="0">At event time</SelectItem>
+                                    <SelectItem value="5">5 minutes before</SelectItem>
+                                    <SelectItem value="10">10 minutes before</SelectItem>
+                                    <SelectItem value="15">15 minutes before</SelectItem>
+                                    <SelectItem value="30">30 minutes before</SelectItem>
+                                    <SelectItem value="60">1 hour before</SelectItem>
+                                    <SelectItem value="1440">1 day before</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.reminder_minutes && (
+                                <InputError message={errors.reminder_minutes} />
                             )}
                         </div>
 

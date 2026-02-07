@@ -6,6 +6,7 @@ use App\Helpers\DateTimeHelper;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Event extends Model
 {
@@ -22,6 +23,7 @@ class Event extends Model
         'start_at_utc',
         'end_at_utc',
         'status',
+        'reminder_minutes',
     ];
 
     /**
@@ -133,5 +135,15 @@ class Event extends Model
             $start,
             $end
         );
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
+    public function pendingReminders(): HasMany
+    {
+        return $this->reminders()->where('status', Reminder::STATUS_PENDING);
     }
 }

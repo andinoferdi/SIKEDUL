@@ -55,3 +55,13 @@ export function formatForDisplay(
 ): string {
     return formatInTimeZone(date, timezone, formatStr);
 }
+
+/**
+ * Format a date as YYYY-MM-DD in the given timezone.
+ */
+export function formatDateOnly(
+    date: Date | string,
+    timezone: string,
+): string {
+    return formatInTimeZone(date, timezone, 'yyyy-MM-dd');
+}
