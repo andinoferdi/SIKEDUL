@@ -10,6 +10,7 @@ import type {
     DateSelectArg,
     EventContentArg,
 } from '@fullcalendar/core';
+import { addDays, parseISO } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Dialog,
@@ -70,12 +71,22 @@ export default function CalendarView({
         () =>
             events.map((entry) => {
                 const isTodo = entry.type === 'todo';
+                const dateOnlyStart = formatDateOnly(entry.start, timezone);
+                const dateOnlyEnd = formatDateOnly(entry.end, timezone);
+                const isMultiDayEvent = !isTodo && dateOnlyStart !== dateOnlyEnd;
+
+                const start = isMultiDayEvent ? dateOnlyStart : entry.start;
+                const end = isMultiDayEvent
+                    ? formatDateOnly(addDays(parseISO(dateOnlyEnd), 1), timezone)
+                    : entry.end;
+
                 return {
                     id: `${entry.type}-${entry.id}`,
                     title: entry.title,
-                    start: entry.start,
-                    end: entry.end,
-                    allDay: entry.allDay,
+                    start,
+                    end,
+                    allDay: isMultiDayEvent ? true : entry.allDay,
+                    display: isMultiDayEvent ? 'background' : 'auto',
                     backgroundColor: isTodo
                         ? '#F59E0B'
                         : entry.category?.color || '#6B7280',
@@ -88,7 +99,7 @@ export default function CalendarView({
                     },
                 };
             }),
-        [events],
+        [events, timezone],
     );
 
     const handleDateClick = (arg: DateClickArg) => {

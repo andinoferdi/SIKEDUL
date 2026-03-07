@@ -15,6 +15,7 @@ class NoEventOverlap implements ValidationRule
     protected Carbon $startUtc;
     protected Carbon $endUtc;
     protected ?int $exceptEventId;
+    protected bool $ignoreConflict;
 
     /**
      * Create a new rule instance.
@@ -30,13 +31,15 @@ class NoEventOverlap implements ValidationRule
         string $timezone,
         string $startDateTime,
         string $endDateTime,
-        ?int $exceptEventId = null
+        ?int $exceptEventId = null,
+        bool $ignoreConflict = false
     ) {
         $this->userId = $userId;
         $this->timezone = $timezone;
         $this->startUtc = DateTimeHelper::convertToUTC($startDateTime, $timezone);
         $this->endUtc = DateTimeHelper::convertToUTC($endDateTime, $timezone);
         $this->exceptEventId = $exceptEventId;
+        $this->ignoreConflict = $ignoreConflict;
     }
 
     /**
@@ -60,7 +63,7 @@ class NoEventOverlap implements ValidationRule
 
         $conflictingEvents = $query->get();
 
-        if ($conflictingEvents->isNotEmpty()) {
+        if ($conflictingEvents->isNotEmpty() && ! $this->ignoreConflict) {
             $eventTitles = $conflictingEvents->pluck('title')->take(3)->implode(', ');
             $fail("Event time overlaps with: {$eventTitles}");
         }

@@ -1,15 +1,12 @@
-import { format, parseISO } from 'date-fns';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 /**
  * Convert a date from a specific timezone to UTC
  */
 export function toUTC(date: Date | string, timezone: string): string {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    // In date-fns-tz v3, we interpret the date as being in the given timezone
-    // and convert to UTC
-    const utcDate = toZonedTime(dateObj, 'UTC');
-    return utcDate.toISOString();
+    const dateObj = typeof date === 'string' ? date : date;
+    return fromZonedTime(dateObj, timezone).toISOString();
 }
 
 /**
@@ -38,11 +35,8 @@ export function parseFromInput(
     datetimeLocal: string,
     timezone: string,
 ): string {
-    const [datePart, timePart] = datetimeLocal.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
-    const date = new Date(year, month - 1, day, hour, minute);
-    return format(date, "yyyy-MM-dd'T'HH:mm:ss");
+    const zonedUtcDate = fromZonedTime(datetimeLocal, timezone);
+    return formatInTimeZone(zonedUtcDate, timezone, "yyyy-MM-dd'T'HH:mm:ss");
 }
 
 /**

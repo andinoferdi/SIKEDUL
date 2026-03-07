@@ -28,6 +28,7 @@ class EventStoreRequest extends FormRequest
             'title' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:5000'],
             'category_id' => ['nullable', 'exists:event_categories,id'],
+            'ignore_conflict' => ['nullable', 'boolean'],
             'start_at' => [
                 'required',
                 'date',
@@ -36,7 +37,9 @@ class EventStoreRequest extends FormRequest
                     $user->id,
                     $user->timezone,
                     $this->input('start_at'),
-                    $this->input('end_at')
+                    $this->input('end_at'),
+                    null,
+                    (bool) $this->boolean('ignore_conflict')
                 ),
             ],
             'end_at' => ['required', 'date', 'after:start_at'],

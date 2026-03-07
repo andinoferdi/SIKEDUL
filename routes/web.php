@@ -24,3 +24,4 @@ require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/events.php';
 require __DIR__.'/todos.php';
+require __DIR__.'/chatbot.php';

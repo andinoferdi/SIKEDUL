@@ -2,6 +2,16 @@ import CategoryBadge from '@/components/calendar/CategoryBadge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -61,6 +71,8 @@ export default function EventDialog({
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
+    const [conflictDialogOpen, setConflictDialogOpen] = useState(false);
+    const [conflictMessage, setConflictMessage] = useState('');
 
     const getStatusVariant = (status: string) => {
         switch (status) {
@@ -107,18 +119,24 @@ export default function EventDialog({
             });
         }
         setErrors({});
+        setConflictDialogOpen(false);
+        setConflictMessage('');
     }, [event, initialStart, initialEnd, timezone, open]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const submitEvent = async (ignoreConflict: boolean) => {
         setErrors({});
         setLoading(true);
 
         try {
+            const payload: EventFormData = {
+                ...formData,
+                ignore_conflict: ignoreConflict,
+            };
+
             if (event) {
-                await onUpdate(event.id, formData);
+                await onUpdate(event.id, payload);
             } else {
-                await onSave(formData);
+                await onSave(payload);
             }
             onOpenChange(false);
         } catch (err: unknown) {
@@ -132,6 +150,15 @@ export default function EventDialog({
                         },
                     );
                     setErrors(formattedErrors);
+
+                    const overlapError = formattedErrors.start_at ?? '';
+                    if (
+                        !ignoreConflict &&
+                        overlapError.toLowerCase().includes('overlaps')
+                    ) {
+                        setConflictMessage(overlapError);
+                        setConflictDialogOpen(true);
+                    }
                 } else {
                     setErrors({ submit: 'Failed to save event' });
                 }
@@ -141,6 +168,16 @@ export default function EventDialog({
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await submitEvent(false);
+    };
+
+    const handleForceSubmit = async () => {
+        setConflictDialogOpen(false);
+        await submitEvent(true);
     };
 
     const handleDelete = async () => {
@@ -159,21 +196,22 @@ export default function EventDialog({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-xl">
-                <DialogHeader>
-                    <DialogTitle>
-                        {event ? 'Edit Event' : 'Create New Event'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {event
-                            ? 'Update event details'
-                            : 'Add a new event to your calendar'}
-                    </DialogDescription>
-                </DialogHeader>
+        <>
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {event ? 'Edit Event' : 'Create New Event'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {event
+                                ? 'Update event details'
+                                : 'Add a new event to your calendar'}
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
+                    <form onSubmit={handleSubmit}>
+                        <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="title">
                                 Title <span className="text-destructive">*</span>
@@ -299,7 +337,7 @@ export default function EventDialog({
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
                             <Select
-                                value={formData.status}
+                                value={formData.status ?? 'planned'}
                                 onValueChange={(value) =>
                                     setFormData({
                                         ...formData,
@@ -309,8 +347,8 @@ export default function EventDialog({
                             >
                                 <SelectTrigger>
                                     <SelectValue>
-                                        <Badge variant={getStatusVariant(formData.status)}>
-                                            {getStatusLabel(formData.status)}
+                                        <Badge variant={getStatusVariant(formData.status ?? 'planned')}>
+                                            {getStatusLabel(formData.status ?? 'planned')}
                                         </Badge>
                                     </SelectValue>
                                 </SelectTrigger>
@@ -366,42 +404,72 @@ export default function EventDialog({
                         )}
                     </div>
 
-                    <DialogFooter>
-                        <div className="flex w-full items-center justify-between">
-                            <div>
-                                {event && (
+                        <DialogFooter>
+                            <div className="flex w-full items-center justify-between">
+                                <div>
+                                    {event && (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            onClick={handleDelete}
+                                            disabled={loading}
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
                                     <Button
                                         type="button"
-                                        variant="destructive"
-                                        onClick={handleDelete}
+                                        variant="outline"
+                                        onClick={() => onOpenChange(false)}
                                         disabled={loading}
                                     >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
+                                        Cancel
                                     </Button>
-                                )}
+                                    <Button type="submit" disabled={loading}>
+                                        {loading
+                                            ? 'Saving...'
+                                            : event
+                                              ? 'Update Event'
+                                              : 'Create Event'}
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => onOpenChange(false)}
-                                    disabled={loading}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={loading}>
-                                    {loading
-                                        ? 'Saving...'
-                                        : event
-                                          ? 'Update Event'
-                                          : 'Create Event'}
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog
+                open={conflictDialogOpen}
+                onOpenChange={setConflictDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Konflik Jadwal Terdeteksi</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {conflictMessage ||
+                                'Waktu event bertabrakan dengan event lain. Anda bisa batal atau tetap simpan.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={loading}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                void handleForceSubmit();
+                            }}
+                            disabled={loading}
+                        >
+                            Tetap Simpan
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     );
 }

@@ -13,7 +13,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Calendar, Folder, LayoutGrid, ListTodo, Users } from 'lucide-react';
+import { BookOpen, Calendar, Folder, LayoutGrid, ListTodo, MessageCircle, Users } from 'lucide-react';
 import AppLogo from '@/components/app/app-logo';
 
 const footerNavItems: NavItem[] = [
@@ -47,6 +47,11 @@ export function AppSidebar() {
             title: 'Todo',
             href: '/todo',
             icon: ListTodo,
+        },
+        {
+            title: 'Chatbot',
+            href: '/chatbot',
+            icon: MessageCircle,
         },
         // Add conditional admin menu
         ...(auth.user.role === 'admin'

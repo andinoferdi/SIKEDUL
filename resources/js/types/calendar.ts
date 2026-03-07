@@ -53,6 +53,7 @@ export interface EventFormData {
     category_id?: number;
     status?: 'planned' | 'done' | 'canceled';
     reminder_minutes?: number | null;
+    ignore_conflict?: boolean;
 }
 
 export interface CategoryFormData {

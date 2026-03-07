@@ -114,4 +114,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(TodoList::class);
     }
+
+    public function chatThreads(): HasMany
+    {
+        return $this->hasMany(ChatThread::class);
+    }
 }

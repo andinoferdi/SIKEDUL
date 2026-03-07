@@ -31,6 +31,7 @@ class EventUpdateRequest extends FormRequest
             'category_id' => ['sometimes', 'nullable', 'exists:event_categories,id'],
             'status' => ['sometimes', 'nullable', 'in:planned,done,canceled'],
             'reminder_minutes' => ['sometimes', 'nullable', 'integer', 'in:0,5,10,15,30,60,1440'],
+            'ignore_conflict' => ['sometimes', 'boolean'],
         ];
 
         // Add overlap validation if start_at or end_at is being updated
@@ -48,7 +49,8 @@ class EventUpdateRequest extends FormRequest
                     $user->timezone,
                     $startAt,
                     $endAt,
-                    $event->id
+                    $event->id,
+                    (bool) $this->boolean('ignore_conflict')
                 ),
             ];
             $rules['end_at'] = ['sometimes', 'required', 'date', 'after:start_at'];

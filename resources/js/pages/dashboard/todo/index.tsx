@@ -224,7 +224,7 @@ export default function TodoPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Todo</h1>
                     <p className="text-muted-foreground mt-1">
-                        Kelola list dan item tugas Anda dengan cepat.
+                        Quickly manage your lists and task items.
                     </p>
                 </div>
 

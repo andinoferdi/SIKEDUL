@@ -103,6 +103,8 @@ export default function CalendarPage({ timezone }: CalendarPageProps) {
         end_at: string;
         category_id?: number;
         status?: 'planned' | 'done' | 'canceled';
+        reminder_minutes?: number | null;
+        ignore_conflict?: boolean;
     }) => {
         const formattedData = {
             ...data,
@@ -121,6 +123,8 @@ export default function CalendarPage({ timezone }: CalendarPageProps) {
             end_at: string;
             category_id?: number;
             status?: 'planned' | 'done' | 'canceled';
+            reminder_minutes?: number | null;
+            ignore_conflict?: boolean;
         }>,
     ) => {
         const formattedData = { ...data };
