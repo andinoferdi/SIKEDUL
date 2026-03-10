@@ -19,13 +19,19 @@ export default function AuthLayout({
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10" {...props}>
             <div className="w-full max-w-sm">
                 <div className="flex flex-col gap-8">
+                    <Link
+                        href={home()}
+                        className="inline-flex w-fit items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {'< Back to home'}
+                    </Link>
                     <div className="flex flex-col items-center gap-4">
                         <Link
                             href={home()}
                             className="flex flex-col items-center gap-2 font-medium"
                         >
-                            <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md">
-                                <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" />
+                            <div className="mb-1 flex items-center justify-center">
+                                <AppLogoIcon className="h-16 w-auto object-contain" alt="SIKEDUL" />
                             </div>
                             <span className="sr-only">{title}</span>
                         </Link>

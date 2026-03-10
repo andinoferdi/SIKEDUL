@@ -1,6 +1,6 @@
 import { login, register } from "@/routes"
 import { Link } from "@inertiajs/react"
-import { Calendar, CheckCircle2, Zap } from "lucide-react"
+import { CheckCircle2, Zap } from "lucide-react"
 
 export default function HeroSection() {
   return (
@@ -60,7 +60,11 @@ export default function HeroSection() {
                   ))}
                 </div>
                 <div className="mt-8">
-                  <Calendar className="h-full w-full text-primary/10" strokeWidth={0.5} />
+                  <img
+                    src="/sikedul1.png"
+                    alt="SIKEDUL"
+                    className="h-full w-full object-contain opacity-15"
+                  />
                 </div>
               </div>
             </div>
