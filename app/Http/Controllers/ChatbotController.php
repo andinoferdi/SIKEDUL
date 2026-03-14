@@ -6,6 +6,7 @@ use App\Models\ChatActionDraft;
 use App\Models\ChatMessage;
 use App\Models\ChatThread;
 use App\Services\ChatbotCommandParser;
+use App\Services\CerebrasChatbotInterpreter;
 use App\Services\ChatbotDraftExecutor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,17 +77,26 @@ class ChatbotController extends Controller
     public function sendMessage(
         Request $request,
         ChatThread $thread,
-        ChatbotCommandParser $parser
+        ChatbotCommandParser $parser,
+        CerebrasChatbotInterpreter $aiInterpreter
     ): JsonResponse {
         if ($thread->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $validated = $request->validate([
-            'content' => ['required', 'string', 'max:5000'],
+            'content' => ['present', 'nullable', 'string', 'max:5000'],
         ]);
 
-        $content = trim($validated['content']);
+        $content = trim((string) ($validated['content'] ?? ''));
+        if ($content === '') {
+            return response()->json([
+                'message' => 'Pesan tidak boleh kosong.',
+                'errors' => [
+                    'content' => ['Pesan tidak boleh kosong.'],
+                ],
+            ], 422);
+        }
 
         ChatMessage::create([
             'thread_id' => $thread->id,
@@ -103,7 +113,28 @@ class ChatbotController extends Controller
             $thread->touch();
         }
 
-        $parsed = $parser->parse($content, $request->user()->timezone);
+        $parsed = $aiInterpreter->interpret($thread->fresh(), $request->user());
+        $latestHash = hash('sha256', Str::lower($content));
+        $parsedHash = (string) ($parsed['meta']['original_command_hash'] ?? '');
+
+        if (($parsed['meta']['fallback_to_legacy'] ?? false) === true) {
+            $parsed = $parser->parse($content, $request->user()->timezone);
+        }
+
+        if ($parsedHash !== '' && $parsedHash !== $latestHash) {
+            $parsed = [
+                'ok' => false,
+                'question' => 'Perintah terakhir belum terbaca konsisten. Mohon kirim ulang instruksi yang ingin dijalankan.',
+                'meta' => [
+                    'parse_stage' => 'controller_hash_guard',
+                    'fallback_to_legacy' => false,
+                    'failure_reason' => 'command_hash_mismatch',
+                    'action_guess' => $parsed['meta']['action_guess'] ?? 'unknown',
+                    'intent_confidence' => 0.0,
+                    'original_command_hash' => $latestHash,
+                ],
+            ];
+        }
 
         if (! ($parsed['ok'] ?? false)) {
             ChatMessage::create([
@@ -133,6 +164,11 @@ class ChatbotController extends Controller
                 'payload' => $parsed['payload'],
                 'preview' => $parsed['preview'] ?? null,
                 'original_command' => $content,
+                'meta' => [
+                    'parser_stage' => $parsed['meta']['parse_stage'] ?? null,
+                    'intent_confidence' => $parsed['meta']['intent_confidence'] ?? null,
+                    'original_command_hash' => $parsed['meta']['original_command_hash'] ?? hash('sha256', Str::lower($content)),
+                ],
             ],
             'status' => ChatActionDraft::STATUS_NEEDS_CONFIRM,
         ]);
@@ -229,4 +265,3 @@ class ChatbotController extends Controller
         ];
     }
 }
-

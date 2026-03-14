@@ -57,10 +57,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const commandSamples = [
-    'buat event 10 januari 09.00 sampai 10.00 judul rapat skripsi kategori skripsi ingatkan 10 menit',
-    'ubah event rapat skripsi jadi 10 januari 10.00 sampai 11.00',
-    'hapus event rapat skripsi',
-    'buat todo minggu ini, revisi bab 1, cari jurnal, bikin diagram',
+    'jadwalkan meeting dosen besok jam 09.00 sampai 10.00 dan ingatkan 15 menit',
+    'pindahkan event rapat skripsi jadi hari sabtu jam 10.00 sampai 11.00',
+    'hapus event rapat skripsi minggu depan',
+    'buat daftar todo minggu ini: revisi bab 1, cari jurnal, bikin diagram',
 ];
 
 export default function ChatbotPage({ threads: initialThreads, activeThread: initialThread }: ChatbotPageProps) {
@@ -69,6 +69,7 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [inputError, setInputError] = useState<string | null>(null);
 
     const activeThreadId = activeThread?.id ?? null;
 
@@ -126,10 +127,14 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
 
     const sendMessage = async (content: string) => {
         const trimmed = content.trim();
-        if (!trimmed) return;
+        if (!trimmed) {
+            setInputError('Pesan tidak boleh kosong.');
+            return;
+        }
 
         setLoading(true);
         setError(null);
+        setInputError(null);
         try {
             let threadId = activeThreadId;
             if (!threadId) {
@@ -156,6 +161,11 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (loading) {
+            setError('Tunggu respons sebelumnya selesai.');
+            return;
+        }
+
         await sendMessage(input);
     };
 
@@ -197,7 +207,7 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Chatbot Command</h1>
                     <p className="text-muted-foreground mt-1">
-                        Use structured commands to create/update/delete events and to-dos.
+                        Gunakan bahasa natural. Sistem akan menyiapkan draft aksi sebelum dieksekusi.
                     </p>
                 </div>
 
@@ -363,14 +373,25 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
                             <form onSubmit={handleSubmit} className="flex gap-2 border-t pt-4">
                                 <Input
                                     value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Tulis perintah chatbot..."
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        if (inputError) {
+                                            setInputError(null);
+                                        }
+                                    }}
+                                    placeholder="Tulis instruksi natural, misalnya: jadwalkan rapat besok jam 9..."
                                     disabled={loading}
                                 />
                                 <Button type="submit" disabled={loading}>
                                     <Send className="h-4 w-4" />
                                 </Button>
                             </form>
+                            {loading && (
+                                <p className="text-muted-foreground text-xs">Sedang memproses...</p>
+                            )}
+                            {inputError && (
+                                <p className="text-destructive text-xs">{inputError}</p>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -378,4 +399,3 @@ export default function ChatbotPage({ threads: initialThreads, activeThread: ini
         </AppLayout>
     );
 }
-
